@@ -18,9 +18,9 @@ public partial class MainPage : ContentPage
 
         button.Text = currentPlayer;
 
-        if (CheckWinner())
+        if (CheckWin())
         {
-            await DisplayAlertAsync("Winner", $"Player {currentPlayer} wins!", "OK");
+            await DisplayAlertAsync("Winner", $"Player {currentPlayer} wins", "OK");
             ResetGame();
             return;
         }
@@ -28,7 +28,7 @@ public partial class MainPage : ContentPage
         currentPlayer = currentPlayer == "X" ? "O" : "X";
     }
 
-    bool CheckWinner()
+    bool CheckWin()
     {
         // lines
         if (B1.Text == B2.Text && B2.Text == B3.Text && !string.IsNullOrEmpty(B1.Text)) return true;
