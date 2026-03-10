@@ -23,7 +23,7 @@
             <Button x:Name="B7" Grid.Row="2" Grid.Column="0" Clicked="OnCellClicked" FontSize="40"/>
             <Button x:Name="B8" Grid.Row="2" Grid.Column="1" Clicked="OnCellClicked" FontSize="40"/>
             <Button x:Name="B9" Grid.Row="2" Grid.Column="2" Clicked="OnCellClicked" FontSize="40"/>
-            
+           
         </Grid>
 
     </VerticalStackLayout>
