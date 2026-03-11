@@ -6,6 +6,11 @@
 
     <VerticalStackLayout Padding="20" Spacing="20">
 
+        <Picker
+            Title="Game Mode"
+            ItemsSource="{Binding GameModes}"
+            SelectedItem="{Binding SelectedMode}" />
+
         <Label
             Text="Morpion"
             FontSize="40"
@@ -26,6 +31,20 @@
             <Button Grid.Row="2" Grid.Column="2" Text="{Binding B9}" Command="{Binding PlayCommand}" CommandParameter="9"/>
 
         </Grid>
+
+        <Label Text="Game History"
+       FontSize="20"
+       HorizontalOptions="Center"/>
+
+        <CollectionView ItemsSource="{Binding Games}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BorderColor="Gray" Padding="5" Margin="2">
+                        <Label Text="{Binding Result}" FontSize="16"/>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
     </VerticalStackLayout>
 
