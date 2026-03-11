@@ -40,27 +40,32 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<GameResult> Games { get; } = new();
 
-    FakeGameHistory history;
+    MorpionDatabase database;
 
-    public MainViewModel(FakeGameHistory history)
+    public MainViewModel(MorpionDatabase database)
     {
-        this.history = history;
+        this.database = database;
 
-        var games = history.GetHistory();
+        LoadHistory();
+    }
+
+    async void LoadHistory()
+    {
+        var games = await database.GetHistoryAsync();
 
         foreach (var g in games)
             Games.Add(g);
     }
 
     [RelayCommand]
-    void Play(string cell)
+    async void Play(string cell)
     {
         if (!PlayCell(cell))
             return;
 
         if (CheckWin())
         {
-            history.AddResult("Victory");
+            await database.AddResultAsync($"Player {currentPlayer} wins");
 
             Games.Add(new GameResult
             {
@@ -75,7 +80,7 @@ public partial class MainViewModel : ObservableObject
 
         if (IsBoardFull())
         {
-            history.AddResult("Draw");
+            await database.AddResultAsync("Draw");
 
             Games.Add(new GameResult
             {
@@ -98,7 +103,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    void BotPlay()
+    async void BotPlay()
     {
         currentPlayer = "O";
 
@@ -116,7 +121,7 @@ public partial class MainViewModel : ObservableObject
 
         if (emptyCells.Count == 0)
         {
-            history.AddResult("Draw");
+            await database.AddResultAsync("Draw");
 
             Games.Add(new GameResult
             {
@@ -135,11 +140,11 @@ public partial class MainViewModel : ObservableObject
 
         if (CheckWin())
         {
-            history.AddResult("Defeat");
+            await database.AddResultAsync("Defeat");
 
             Games.Add(new GameResult
             {
-                Result = "Defeat"
+                Result = "Defeat"           
             });
 
             WeakReferenceMessenger.Default.Send("Bot wins");
