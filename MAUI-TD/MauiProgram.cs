@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MAUI_TD.Services;
+using MAUI_TD.ViewModels;
+using MAUI_TD.Views;
+using Microsoft.Extensions.Logging;
 
 namespace MAUI_TD
 {
@@ -18,6 +21,9 @@ namespace MAUI_TD
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddSingleton<FakeGameHistory>();
+            builder.Services.AddTransient<MainViewModel>();
+            builder.Services.AddTransient<MainPage>();
 
             return builder.Build();
         }

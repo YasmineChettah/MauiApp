@@ -5,14 +5,14 @@ namespace MAUI_TD.Views;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage()
+    public MainPage(MainViewModel vm)
     {
         InitializeComponent();
-        BindingContext = new MainViewModel();
+        BindingContext = vm;
 
-        WeakReferenceMessenger.Default.Register<string>(this, async (r, player) =>
+    WeakReferenceMessenger.Default.Register<string>(this, async (r, player) =>
         {
-            await DisplayAlertAsync("Winner", $"Player {player} wins", "OK");
+            await DisplayAlertAsync("Winner", $"{player}", "OK");
         });
     }
 }
