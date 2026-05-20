@@ -6,11 +6,6 @@
 
     <VerticalStackLayout Padding="20" Spacing="20">
 
-        <Picker
-            Title="Game Mode"
-            ItemsSource="{Binding GameModes}"
-            SelectedItem="{Binding SelectedMode}" />
-
         <Label
             Text="Morpion"
             FontSize="40"

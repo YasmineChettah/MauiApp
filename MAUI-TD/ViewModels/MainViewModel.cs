@@ -19,193 +19,99 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] string? b8;
     [ObservableProperty] string? b9;
 
-    public enum GameMode
-    {
-        HumanVsHuman,
-        HumanVsBot
-    }
-
-    public List<GameMode> GameModes { get; } =
-    [
-        GameMode.HumanVsHuman,
-        GameMode.HumanVsBot
-    ];
-
-    [ObservableProperty]
-    GameMode selectedMode = GameMode.HumanVsHuman;
-
-    string currentPlayer = "X";
-
-    Random random = new Random();
-
     public ObservableCollection<GameResult> Games { get; } = new();
 
-    MorpionDatabase database;
+    private readonly MorpionDatabase _database;
+    private readonly MorpionApiService _api;
+
+    private Guid? _partieId = null;
+    private bool _enAttente = false;
 
     public MainViewModel(MorpionDatabase database)
     {
-        this.database = database;
-
+        _database = database;
+        _api = new MorpionApiService();
         LoadHistory();
     }
 
     async void LoadHistory()
     {
-        var games = await database.GetHistoryAsync();
-
+        var games = await _database.GetHistoryAsync();
         foreach (var g in games)
             Games.Add(g);
     }
 
     [RelayCommand]
-    async void Play(string cell)
+    async Task Play(string cell)
     {
-        if (!PlayCell(cell))
-            return;
+        if (_enAttente) return;
 
-        if (CheckWin())
+        
+        if (!int.TryParse(cell, out int num)) return;
+        int caseIndex = num - 1;
+
+        if (_partieId == null)
         {
-            await database.AddResultAsync($"Player {currentPlayer} wins");
+            _enAttente = true;
+            var nouvelle = await _api.CreerPartieAsync();
+            _enAttente = false;
 
-            Games.Add(new GameResult
+            if (nouvelle == null)
             {
-                Result = $"Player {currentPlayer} wins"
-            });
+                WeakReferenceMessenger.Default.Send("Error : Can't access the API");
+                return;
+            }
 
-            WeakReferenceMessenger.Default.Send($"Player {currentPlayer} wins");
-
-            ResetGame();
-            return;
+            _partieId = nouvelle.Id;
         }
 
-        if (IsBoardFull())
+        
+        _enAttente = true;
+        var partie = await _api.JouerCoupAsync(_partieId.Value, caseIndex);
+        _enAttente = false;
+
+        if (partie == null) return; 
+
+        
+        MettreAJourPlateau(partie.Plateau);
+
+        
+        if (partie.Terminee)
         {
-            await database.AddResultAsync("Draw");
+            string resultat;
 
-            Games.Add(new GameResult
-            {
-                Result = "Draw"
-            });
+            if (partie.Gagnant == "X")
+                resultat = "Player X wins";
+            else if (partie.Gagnant == "O")
+                resultat = "Defeat";
+            else
+                resultat = "Draw";
 
-            WeakReferenceMessenger.Default.Send("Draw");
+            await _database.AddResultAsync(resultat);
+            Games.Add(new GameResult { Result = resultat });
+            WeakReferenceMessenger.Default.Send(resultat);
 
-            ResetGame();
-            return;
-        }
-
-        if (SelectedMode == GameMode.HumanVsBot)
-        {
-            BotPlay();
-        }
-        else
-        {
-            currentPlayer = currentPlayer == "X" ? "O" : "X";
+            
+            _partieId = null;
+            ResetPlateau();
         }
     }
 
-    async void BotPlay()
+    void MettreAJourPlateau(string?[] plateau)
     {
-        currentPlayer = "O";
-
-        var emptyCells = new List<string>();
-
-        if (string.IsNullOrEmpty(B1)) emptyCells.Add("1");
-        if (string.IsNullOrEmpty(B2)) emptyCells.Add("2");
-        if (string.IsNullOrEmpty(B3)) emptyCells.Add("3");
-        if (string.IsNullOrEmpty(B4)) emptyCells.Add("4");
-        if (string.IsNullOrEmpty(B5)) emptyCells.Add("5");
-        if (string.IsNullOrEmpty(B6)) emptyCells.Add("6");
-        if (string.IsNullOrEmpty(B7)) emptyCells.Add("7");
-        if (string.IsNullOrEmpty(B8)) emptyCells.Add("8");
-        if (string.IsNullOrEmpty(B9)) emptyCells.Add("9");
-
-        if (emptyCells.Count == 0)
-        {
-            await database.AddResultAsync("Draw");
-
-            Games.Add(new GameResult
-            {
-                Result = "Draw"
-            });
-
-            WeakReferenceMessenger.Default.Send("Draw");
-
-            ResetGame();
-            return;
-        }
-
-        var cell = emptyCells[random.Next(emptyCells.Count)];
-
-        PlayCell(cell);
-
-        if (CheckWin())
-        {
-            await database.AddResultAsync("Defeat");
-
-            Games.Add(new GameResult
-            {
-                Result = "Defeat"           
-            });
-
-            WeakReferenceMessenger.Default.Send("Bot wins");
-
-            ResetGame();
-            return;
-        }
-
-        currentPlayer = "X";
+        B1 = plateau[0] ?? "";
+        B2 = plateau[1] ?? "";
+        B3 = plateau[2] ?? "";
+        B4 = plateau[3] ?? "";
+        B5 = plateau[4] ?? "";
+        B6 = plateau[5] ?? "";
+        B7 = plateau[6] ?? "";
+        B8 = plateau[7] ?? "";
+        B9 = plateau[8] ?? "";
     }
 
-    bool PlayCell(string cell)
-    {
-        switch (cell)
-        {
-            case "1": if (string.IsNullOrEmpty(B1)) { B1 = currentPlayer; return true; } break;
-            case "2": if (string.IsNullOrEmpty(B2)) { B2 = currentPlayer; return true; } break;
-            case "3": if (string.IsNullOrEmpty(B3)) { B3 = currentPlayer; return true; } break;
-            case "4": if (string.IsNullOrEmpty(B4)) { B4 = currentPlayer; return true; } break;
-            case "5": if (string.IsNullOrEmpty(B5)) { B5 = currentPlayer; return true; } break;
-            case "6": if (string.IsNullOrEmpty(B6)) { B6 = currentPlayer; return true; } break;
-            case "7": if (string.IsNullOrEmpty(B7)) { B7 = currentPlayer; return true; } break;
-            case "8": if (string.IsNullOrEmpty(B8)) { B8 = currentPlayer; return true; } break;
-            case "9": if (string.IsNullOrEmpty(B9)) { B9 = currentPlayer; return true; } break;
-        }
-
-        return false;
-    }
-
-    bool CheckWin()
-    {
-        if (B1 == B2 && B2 == B3 && !string.IsNullOrEmpty(B1)) return true;
-        if (B4 == B5 && B5 == B6 && !string.IsNullOrEmpty(B4)) return true;
-        if (B7 == B8 && B8 == B9 && !string.IsNullOrEmpty(B7)) return true;
-
-        if (B1 == B4 && B4 == B7 && !string.IsNullOrEmpty(B1)) return true;
-        if (B2 == B5 && B5 == B8 && !string.IsNullOrEmpty(B2)) return true;
-        if (B3 == B6 && B6 == B9 && !string.IsNullOrEmpty(B3)) return true;
-
-        if (B1 == B5 && B5 == B9 && !string.IsNullOrEmpty(B1)) return true;
-        if (B3 == B5 && B5 == B7 && !string.IsNullOrEmpty(B3)) return true;
-
-        return false;
-    }
-
-    void ResetGame()
+    void ResetPlateau()
     {
         B1 = B2 = B3 = B4 = B5 = B6 = B7 = B8 = B9 = "";
-        currentPlayer = "X";
-    }
-
-    bool IsBoardFull()
-    {
-        return !string.IsNullOrEmpty(B1) &&
-               !string.IsNullOrEmpty(B2) &&
-               !string.IsNullOrEmpty(B3) &&
-               !string.IsNullOrEmpty(B4) &&
-               !string.IsNullOrEmpty(B5) &&
-               !string.IsNullOrEmpty(B6) &&
-               !string.IsNullOrEmpty(B7) &&
-               !string.IsNullOrEmpty(B8) &&
-               !string.IsNullOrEmpty(B9);
     }
 }
