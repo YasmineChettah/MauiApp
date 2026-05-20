@@ -21,7 +21,7 @@ namespace MAUI_TD
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
-            builder.Services.AddSingleton<FakeGameHistory>();
+            builder.Services.AddSingleton<MorpionDatabase>();
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<MainPage>();
 
