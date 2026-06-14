@@ -24,6 +24,9 @@ namespace MAUI_TD
             builder.Services.AddSingleton<MorpionDatabase>();
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<MainPage>();
+            builder.Services.AddSingleton<MorpionApiService>();
+            builder.Services.AddTransient<LoginViewModel>();
+            builder.Services.AddTransient<LoginPage>();
 
             return builder.Build();
         }

@@ -5,6 +5,7 @@ using MAUI_TD.Models;
 using MAUI_TD.Services;
 using System.Collections.ObjectModel;
 
+
 namespace MAUI_TD.ViewModels;
 
 public partial class MainViewModel : ObservableObject
@@ -27,10 +28,10 @@ public partial class MainViewModel : ObservableObject
     private Guid? _partieId = null;
     private bool _enAttente = false;
 
-    public MainViewModel(MorpionDatabase database)
+    public MainViewModel(MorpionDatabase database, MorpionApiService api)
     {
         _database = database;
-        _api = new MorpionApiService();
+        _api = api;
         LoadHistory();
     }
 
